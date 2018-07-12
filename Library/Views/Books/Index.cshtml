@@ -1,0 +1,69 @@
+﻿@model IEnumerable<Library.Models.BookModel>
+
+@{
+    ViewBag.Title = "Index";
+
+    WebGrid grid = new WebGrid(null, rowsPerPage: 4);
+    grid.Bind(Model, autoSortAndPage: true, rowCount: 4);
+}
+
+
+<h2>Books</h2>
+
+<p>
+    @Html.ActionLink("Add New Book", "Create")
+</p>
+
+@grid.GetHtml(tableStyle: "table table-bordered",
+ mode: WebGridPagerModes.All,
+ firstText: "<< First",
+ previousText: "< Prev",
+ nextText: "Next >",
+ lastText: "Last >>",
+    columns: grid.Columns(
+    grid.Column("Title", "Title"),
+    grid.Column("Quantity", "Quantity")@*,
+    grid.Column(header: "Action",
+                format: @<a data-value="@item.Id" href="java{C}<!-- no -->script:void(0)">Edit</a>)*@
+
+    ))
+
+
+@*<table class="table">
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Title)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Quantity)
+            </th>
+            <th></th>
+        </tr>
+
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Title)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Quantity)
+                </td>
+                <td>
+                    @if (item.Quantity > 0)
+                    {
+                        @Html.ActionLink("Take book", "Take", new { id = item.Id });
+                    }
+                    else
+                    {
+                        @Html.Label("No book to take");
+                    }
+                    |
+                    @Html.ActionLink("History", "History", new { id = item.Id }) |
+                    @Html.ActionLink("Change quantity", "ChangeQuantity", new { id = item.Id }) |
+                    @Html.ActionLink("Delete", "Delete", new { id = item.Id })
+                </td>
+            </tr>
+        }
+
+    </table>*@
