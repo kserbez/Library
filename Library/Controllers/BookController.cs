@@ -11,12 +11,14 @@ using System.Web.Mvc;
 
 namespace Library.Controllers
 {
-    public class BooksController : Controller
+    //[Authorize]
+    public class BookController : Controller
     {
         private BooksDA booksDA = new BooksDA();
 
 
         [HttpGet]
+        [AllowAnonymous]
         public ActionResult Index()
         {
             List<BookModel> allBooks = booksDA.GetAllBooksAsList();

@@ -17,6 +17,6 @@ namespace Library.Models
         public int Quantity { get; set; }
 
 
-        public IEnumerable<AuthorModel> Authors;
+        public List<AuthorModel> Authors;
     }
 }

@@ -12,94 +12,86 @@ namespace Library.DataAccess
     {
         public List<BookModel> GetAllBooksAsList()
         {
-            DataTable booksDT = new DataTable();
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                connection.Open();
-                SqlDataAdapter sqlDA = new SqlDataAdapter("SELECT * FROM Books", connection);
-                //var sqlStr = @"SELECT b.Title, a.FullName
-                //    FROM Books AS b LEFT JOIN BooksAuthors AS ba
-                //    ON(b.Id = ba.BookId) LEFT JOIN Authors AS a
-                //    ON(ba.AuthorID = a.Id)";
-                //SqlDataAdapter sqlDA = new SqlDataAdapter(sqlStr, connection);
-                sqlDA.Fill(booksDT);
-            }
+            var query = "SELECT * FROM Books";
+            DataTable dt = GetDataTableByQuery(query);
+
+            var result = new List<BookModel>();
+            for (int i = 0; i < dt.Rows.Count; i++)
+                result.Add(GetBookModelBy(dt.Rows[i], dt.Columns));
+
+            return result;
+        }
+
+        public List<BookModel> GetAllBooksWithAuthorsAsList()
+        {
+            var query = @"SELECT b.Id, b.Title, b.Quantity, a.FullName FROM Books AS b
+                    LEFT JOIN BooksAuthors AS ba ON(b.Id = ba.BookId)
+                    LEFT JOIN Authors AS a ON(ba.AuthorID = a.Id)
+                    ORDER BY b.Id";
+            DataTable booksDT = GetDataTableByQuery(query);
 
             var result = new List<BookModel>();
             for (int i = 0; i < booksDT.Rows.Count; i++)
                 result.Add(GetBookModelBy(booksDT.Rows[i], booksDT.Columns));
 
-            return result;
+            return GetUniqueWithAuthors(result);
         }
 
-        public void InsertBook(BookModel bookModel)
+
+        public void InsertBook(BookModel model)
         {
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                connection.Open();
-                string query = "INSERT INTO Books VALUES(@Title,@Quantity)";
-                SqlCommand sqlCmd = new SqlCommand(query, connection);
-                sqlCmd.Parameters.AddWithValue("@Title", bookModel.Title);
-                sqlCmd.Parameters.AddWithValue("@Quantity", bookModel.Quantity);
-                sqlCmd.ExecuteNonQuery();
-            }
+            string query = "INSERT INTO Books VALUES(@Title,@Quantity)";
+            var parameters = new Dictionary<string, object> {
+                { "@Title", model.Title },
+                { "@Quantity", model.Quantity },
+            };
+            ExecuteNonQuery(query, parameters);
         }
 
         public void DeleteBook(int id)
         {
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                connection.Open();
-                string query = "DELETE FROM Books WHERE Id = @Id";
-                SqlCommand sqlCmd = new SqlCommand(query, connection);
-                sqlCmd.Parameters.AddWithValue("@Id", id);
-                sqlCmd.ExecuteNonQuery();
-            }
+            string query = "DELETE FROM Books WHERE Id = @Id";
+            var parameters = new Dictionary<string, object> {
+                { "@Id", id },
+            };
+            ExecuteNonQuery(query, parameters);
         }
 
-        public void UpdateBook(BookModel bookModel)
+        public void UpdateBook(BookModel model)
         {
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                connection.Open();
-                string query = "UPDATE Books SET Title = @Title , Quantity = @Quantity WHERE Id = @Id";
-                SqlCommand sqlCmd = new SqlCommand(query, connection);
-                sqlCmd.Parameters.AddWithValue("@Id", bookModel.Id);
-                sqlCmd.Parameters.AddWithValue("@Title", bookModel.Title);
-                sqlCmd.Parameters.AddWithValue("@Quantity", bookModel.Quantity);
-                sqlCmd.ExecuteNonQuery();
-            }
+            string query = "UPDATE Books SET Title = @Title , Quantity = @Quantity WHERE Id = @Id";
+            var parameters = new Dictionary<string, object> {
+                { "@Id", model.Id },
+                { "@Title", model.Title },
+                { "@Quantity", model.Quantity },
+            };
+            ExecuteNonQuery(query, parameters);
         }
 
         public bool ExistsBookWithId(int id)
         {
-            DataTable booksDT = GetBookDataTableBy(id);
-            return (booksDT.Rows.Count == 1);
+            DataTable dt = GetBookDataTableBy(id);
+            return (dt.Rows.Count == 1);
         }
 
         public BookModel GetBookModelBy(int id)
         {
-            DataTable booksDT = GetBookDataTableBy(id);
+            DataTable dt = GetBookDataTableBy(id);
 
-            if (booksDT.Rows.Count == 1)
-                return GetBookModelBy(booksDT.Rows[0], booksDT.Columns);
+            if (dt.Rows.Count == 1)
+                return GetBookModelBy(dt.Rows[0], dt.Columns);
             else return null;
         }
 
 
         public DataTable GetBookDataTableBy(int id)
         {
-            DataTable result = new DataTable();
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                connection.Open();
-                string query = "SELECT * FROM Books WHERE Id = @Id";
-                SqlDataAdapter sqlDA = new SqlDataAdapter(query, connection);
-                sqlDA.SelectCommand.Parameters.AddWithValue("@Id", id);
-                sqlDA.Fill(result);
-            }
+            string query = "SELECT * FROM Books WHERE Id = @Id";
+            var parameters = new Dictionary<string, object> {
+                { "@Id", id },
+            };
 
-            return result;
+            return GetDataTableByQuery(query, parameters);
         }
 
         public BookModel GetBookModelBy(DataRow dataRow, DataColumnCollection columns)
@@ -109,7 +101,18 @@ namespace Library.DataAccess
                 Id = Convert.ToInt32(dataRow[columns.IndexOf("Id")]),
                 Title = Convert.ToString(dataRow[columns.IndexOf("Title")]),
                 Quantity = Convert.ToInt32(dataRow[columns.IndexOf("Quantity")]),
+                Authors = null //new List<AuthorModel>()
             };
+        }
+
+
+        private List<BookModel> GetUniqueWithAuthors(List<BookModel> models)
+        {
+            var result = new List<BookModel>();
+
+            result = models.Distinct().ToList();
+
+            return result;
         }
     }
 }
