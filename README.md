@@ -1,5 +1,5 @@
 # About project
-This is a test task project. [Here](https://drive.google.com/open?id=1Ojw1OmjNkZyfszlIhig1WJ3totO7AU4-) you can download the task.
+This is a test task project.
 
 # Installation Guide
 In order to run this project you need:
